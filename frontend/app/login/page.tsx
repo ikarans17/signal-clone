@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 type Step = "login" | "register" | "otp";
 
 export default function LoginPage() {
@@ -22,7 +24,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8000/auth/login", {
+      const res = await axios.post(`${API}/auth/login`, {
         username: form.username,
         password: form.password,
       });
@@ -54,7 +56,7 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:8000/auth/register", pendingData);
+      const res = await axios.post(`${API}/auth/register`, pendingData);
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
       toast.success("Account created!");
@@ -67,28 +69,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      display: "flex", justifyContent: "center", alignItems: "center",
-      height: "100vh", background: "#111b21"
-    }}>
-      <div style={{
-        background: "#202c33", borderRadius: "16px", padding: "40px",
-        width: "400px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)"
-      }}>
-        {/* Logo */}
+    <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#111b21" }}>
+      <div style={{ background: "#202c33", borderRadius: "16px", padding: "40px", width: "400px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{
-            width: "64px", height: "64px", borderRadius: "50%",
-            background: "#00a884", display: "flex", alignItems: "center",
-            justifyContent: "center", margin: "0 auto 16px", fontSize: "32px"
-          }}>💬</div>
+          <div style={{ width: "64px", height: "64px", borderRadius: "50%", background: "#00a884", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: "32px" }}>💬</div>
           <h1 style={{ color: "#e9edef", fontSize: "24px", fontWeight: "600" }}>Signal</h1>
           <p style={{ color: "#8696a0", fontSize: "14px", marginTop: "4px" }}>
             {step === "otp" ? "Enter verification code" : step === "register" ? "Create your account" : "Sign in to continue"}
           </p>
         </div>
 
-        {/* OTP Step */}
         {step === "otp" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <div style={{ background: "#2a3942", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
@@ -96,42 +86,25 @@ export default function LoginPage() {
               <p style={{ color: "#00a884", fontSize: "15px", fontWeight: "600" }}>{pendingData?.phone_number}</p>
               <p style={{ color: "#8696a0", fontSize: "12px", marginTop: "4px" }}>Demo OTP: <strong style={{ color: "#00a884" }}>123456</strong></p>
             </div>
-            <input
-              placeholder="Enter 6-digit OTP"
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-              maxLength={6}
-              style={{ ...inputStyle, textAlign: "center", fontSize: "24px", letterSpacing: "8px" }}
-            />
+            <input placeholder="Enter 6-digit OTP" value={otp} onChange={e => setOtp(e.target.value)} maxLength={6}
+              style={{ ...inputStyle, textAlign: "center", fontSize: "24px", letterSpacing: "8px" }} />
             <button onClick={handleOTPVerify} disabled={loading} style={btnStyle(loading)}>
               {loading ? "Verifying..." : "Verify OTP"}
             </button>
-            <p
-              onClick={() => setStep("register")}
-              style={{ textAlign: "center", color: "#00a884", fontSize: "14px", cursor: "pointer" }}
-            >
-              ← Back
-            </p>
+            <p onClick={() => setStep("register")} style={{ textAlign: "center", color: "#00a884", fontSize: "14px", cursor: "pointer" }}>← Back</p>
           </div>
         )}
 
-        {/* Login Step */}
         {step === "login" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <input placeholder="Username" value={form.username}
-              onChange={e => setForm({ ...form, username: e.target.value })} style={inputStyle} />
-            <input placeholder="Password" type="password" value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })}
-              onKeyDown={e => e.key === "Enter" && handleLogin()}
-              style={inputStyle} />
+            <input placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} style={inputStyle} />
+            <input placeholder="Password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} onKeyDown={e => e.key === "Enter" && handleLogin()} style={inputStyle} />
             <button onClick={handleLogin} disabled={loading} style={btnStyle(loading)}>
               {loading ? "Please wait..." : "Sign In"}
             </button>
             <p style={{ textAlign: "center", color: "#8696a0", fontSize: "14px" }}>
               Don't have an account?{" "}
-              <span onClick={() => setStep("register")} style={{ color: "#00a884", cursor: "pointer" }}>
-                Register
-              </span>
+              <span onClick={() => setStep("register")} style={{ color: "#00a884", cursor: "pointer" }}>Register</span>
             </p>
             <div style={{ background: "#2a3942", borderRadius: "8px", padding: "12px" }}>
               <p style={{ color: "#8696a0", fontSize: "12px", textAlign: "center" }}>
@@ -142,25 +115,16 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Register Step */}
         {step === "register" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            <input placeholder="Username" value={form.username}
-              onChange={e => setForm({ ...form, username: e.target.value })} style={inputStyle} />
-            <input placeholder="Password" type="password" value={form.password}
-              onChange={e => setForm({ ...form, password: e.target.value })} style={inputStyle} />
-            <input placeholder="Display Name" value={form.display_name}
-              onChange={e => setForm({ ...form, display_name: e.target.value })} style={inputStyle} />
-            <input placeholder="Phone Number (e.g. +911234567890)" value={form.phone_number}
-              onChange={e => setForm({ ...form, phone_number: e.target.value })} style={inputStyle} />
-            <button onClick={handleRegister} disabled={loading} style={btnStyle(loading)}>
-              Send OTP
-            </button>
+            <input placeholder="Username" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} style={inputStyle} />
+            <input placeholder="Password" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} style={inputStyle} />
+            <input placeholder="Display Name" value={form.display_name} onChange={e => setForm({ ...form, display_name: e.target.value })} style={inputStyle} />
+            <input placeholder="Phone Number (e.g. +911234567890)" value={form.phone_number} onChange={e => setForm({ ...form, phone_number: e.target.value })} style={inputStyle} />
+            <button onClick={handleRegister} disabled={loading} style={btnStyle(loading)}>Send OTP</button>
             <p style={{ textAlign: "center", color: "#8696a0", fontSize: "14px" }}>
               Already have an account?{" "}
-              <span onClick={() => setStep("login")} style={{ color: "#00a884", cursor: "pointer" }}>
-                Sign In
-              </span>
+              <span onClick={() => setStep("login")} style={{ color: "#00a884", cursor: "pointer" }}>Sign In</span>
             </p>
           </div>
         )}

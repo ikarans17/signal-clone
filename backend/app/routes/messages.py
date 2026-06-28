@@ -92,3 +92,27 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
 @router.get("/users")
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(User).all()
+    @router.post("/conversations/{conv_id}/members/{user_id}")
+def add_member(conv_id: int, user_id: int, db: Session = Depends(get_db)):
+    existing = db.query(ConversationMember).filter(
+        ConversationMember.conversation_id == conv_id,
+        ConversationMember.user_id == user_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Already a member")
+    member = ConversationMember(conversation_id=conv_id, user_id=user_id)
+    db.add(member)
+    db.commit()
+    return {"message": "Member added"}
+
+@router.delete("/conversations/{conv_id}/members/{user_id}")
+def remove_member(conv_id: int, user_id: int, db: Session = Depends(get_db)):
+    member = db.query(ConversationMember).filter(
+        ConversationMember.conversation_id == conv_id,
+        ConversationMember.user_id == user_id
+    ).first()
+    if not member:
+        raise HTTPException(status_code=404, detail="Member not found")
+    db.delete(member)
+    db.commit()
+    return {"message": "Member removed"}

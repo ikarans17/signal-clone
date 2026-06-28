@@ -4,6 +4,9 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
 
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const WS = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+
 interface User {
   id: number;
   username: string;
@@ -63,7 +66,7 @@ export default function ChatPage() {
   }, [messages]);
 
   const connectWebSocket = (userId: number) => {
-    const ws = new WebSocket(`ws://localhost:8000/ws/${userId}`);
+    const ws = new WebSocket(`${WS}/ws/${userId}`);
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "message") {
@@ -79,21 +82,21 @@ export default function ChatPage() {
 
   const fetchConversations = async (userId: number) => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/conversations/${userId}`);
+      const res = await axios.get(`${API}/api/conversations/${userId}`);
       setConversations(res.data);
     } catch { toast.error("Failed to load conversations"); }
   };
 
   const fetchMessages = async (convId: number) => {
     try {
-      const res = await axios.get(`http://localhost:8000/api/messages/${convId}`);
+      const res = await axios.get(`${API}/api/messages/${convId}`);
       setMessages(res.data);
     } catch { toast.error("Failed to load messages"); }
   };
 
   const fetchAllUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/api/users");
+      const res = await axios.get(`${API}/api/users`);
       setAllUsers(res.data.filter((u: User) => u.id !== user?.id));
     } catch { toast.error("Failed to load users"); }
   };
@@ -118,7 +121,7 @@ export default function ChatPage() {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConv || !user) return;
     try {
-      await axios.post("http://localhost:8000/api/messages", {
+      await axios.post(`${API}/api/messages`, {
         conversation_id: selectedConv.id,
         sender_id: user.id,
         content: newMessage,
@@ -131,7 +134,7 @@ export default function ChatPage() {
 
   const startNewChat = async (targetUser: User) => {
     try {
-      await axios.post("http://localhost:8000/api/conversations", {
+      await axios.post(`${API}/api/conversations`, {
         member_ids: [user?.id, targetUser.id],
         is_group: false,
       });
@@ -145,7 +148,7 @@ export default function ChatPage() {
     if (!groupName.trim()) { toast.error("Enter group name"); return; }
     if (selectedMembers.length < 2) { toast.error("Select at least 2 members"); return; }
     try {
-      await axios.post("http://localhost:8000/api/conversations", {
+      await axios.post(`${API}/api/conversations`, {
         member_ids: [user?.id, ...selectedMembers],
         is_group: true,
         group_name: groupName,
@@ -198,7 +201,6 @@ export default function ChatPage() {
   return (
     <div style={{ display: "flex", height: "100vh", background: "#111b21" }}>
 
-      {/* NEW CHAT MODAL */}
       {showNewChat && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div style={{ background: "#202c33", borderRadius: "16px", padding: "24px", width: "360px", maxHeight: "500px", display: "flex", flexDirection: "column" }}>
@@ -206,12 +208,8 @@ export default function ChatPage() {
               <h3 style={{ color: "#e9edef", fontSize: "18px" }}>New Chat</h3>
               <button onClick={() => setShowNewChat(false)} style={{ background: "none", border: "none", color: "#8696a0", fontSize: "20px", cursor: "pointer" }}>✕</button>
             </div>
-            <input
-              placeholder="Search users..."
-              value={userSearch}
-              onChange={e => setUserSearch(e.target.value)}
-              style={{ background: "#2a3942", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none", marginBottom: "12px" }}
-            />
+            <input placeholder="Search users..." value={userSearch} onChange={e => setUserSearch(e.target.value)}
+              style={{ background: "#2a3942", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none", marginBottom: "12px" }} />
             <div style={{ overflowY: "auto", flex: 1 }}>
               {allUsers.filter(u => u.display_name.toLowerCase().includes(userSearch.toLowerCase())).map(u => (
                 <div key={u.id} onClick={() => startNewChat(u)}
@@ -233,7 +231,6 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* NEW GROUP MODAL */}
       {showNewGroup && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div style={{ background: "#202c33", borderRadius: "16px", padding: "24px", width: "360px", maxHeight: "560px", display: "flex", flexDirection: "column" }}>
@@ -241,12 +238,8 @@ export default function ChatPage() {
               <h3 style={{ color: "#e9edef", fontSize: "18px" }}>New Group</h3>
               <button onClick={() => setShowNewGroup(false)} style={{ background: "none", border: "none", color: "#8696a0", fontSize: "20px", cursor: "pointer" }}>✕</button>
             </div>
-            <input
-              placeholder="Group name..."
-              value={groupName}
-              onChange={e => setGroupName(e.target.value)}
-              style={{ background: "#2a3942", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none", marginBottom: "12px" }}
-            />
+            <input placeholder="Group name..." value={groupName} onChange={e => setGroupName(e.target.value)}
+              style={{ background: "#2a3942", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none", marginBottom: "12px" }} />
             <p style={{ color: "#8696a0", fontSize: "13px", marginBottom: "8px" }}>Select members ({selectedMembers.length} selected)</p>
             <div style={{ overflowY: "auto", flex: 1 }}>
               {allUsers.map(u => (
@@ -271,7 +264,6 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* LEFT SIDEBAR */}
       <div style={{ width: "380px", borderRight: "1px solid #2a3942", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "16px", background: "#202c33", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -297,12 +289,8 @@ export default function ChatPage() {
         </div>
 
         <div style={{ padding: "8px 12px", background: "#111b21" }}>
-          <input
-            placeholder="🔍  Search or start new chat"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: "100%", background: "#202c33", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none" }}
-          />
+          <input placeholder="🔍  Search or start new chat" value={search} onChange={e => setSearch(e.target.value)}
+            style={{ width: "100%", background: "#202c33", border: "none", borderRadius: "8px", padding: "10px 16px", color: "#e9edef", fontSize: "14px", outline: "none" }} />
         </div>
 
         <div style={{ flex: 1, overflowY: "auto" }}>
@@ -338,7 +326,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* RIGHT CHAT PANE */}
       {selectedConv ? (
         <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "12px 20px", background: "#202c33", display: "flex", alignItems: "center", gap: "12px", borderBottom: "1px solid #2a3942" }}>
@@ -378,17 +365,9 @@ export default function ChatPage() {
           </div>
 
           <div style={{ padding: "12px 16px", background: "#202c33", display: "flex", gap: "12px", alignItems: "center" }}>
-            <input
-              value={newMessage}
-              onChange={e => handleTyping(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendMessage()}
-              placeholder="Type a message"
-              style={{ flex: 1, background: "#2a3942", border: "none", borderRadius: "8px", padding: "12px 16px", color: "#e9edef", fontSize: "15px", outline: "none" }}
-            />
-            <button onClick={sendMessage}
-              style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#00a884", border: "none", cursor: "pointer", fontSize: "20px" }}>
-              ➤
-            </button>
+            <input value={newMessage} onChange={e => handleTyping(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder="Type a message"
+              style={{ flex: 1, background: "#2a3942", border: "none", borderRadius: "8px", padding: "12px 16px", color: "#e9edef", fontSize: "15px", outline: "none" }} />
+            <button onClick={sendMessage} style={{ width: "44px", height: "44px", borderRadius: "50%", background: "#00a884", border: "none", cursor: "pointer", fontSize: "20px" }}>➤</button>
           </div>
         </div>
       ) : (
