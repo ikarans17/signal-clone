@@ -72,6 +72,14 @@ def get_conversations(user_id: int, db: Session = Depends(get_db)):
         })
     return result
 
+@router.delete("/conversations/{conv_id}")
+def delete_conversation(conv_id: int, db: Session = Depends(get_db)):
+    db.query(Message).filter(Message.conversation_id == conv_id).delete()
+    db.query(ConversationMember).filter(ConversationMember.conversation_id == conv_id).delete()
+    db.query(Conversation).filter(Conversation.id == conv_id).delete()
+    db.commit()
+    return {"message": "Conversation deleted"}
+
 @router.post("/messages", response_model=MessageOut)
 def send_message(data: MessageCreate, db: Session = Depends(get_db)):
     msg = Message(
