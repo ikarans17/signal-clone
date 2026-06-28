@@ -13,7 +13,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,13 +30,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: int):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(user_id)
-
-@app.get("/")
-def home():
-    return {"message": "Signal Clone API Running"}
-
-app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-app.include_router(messages_router, prefix="/api", tags=["Messages"])
 
 @app.get("/")
 def home():
