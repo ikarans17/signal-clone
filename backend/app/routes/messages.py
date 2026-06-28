@@ -89,10 +89,12 @@ def get_messages(conversation_id: int, db: Session = Depends(get_db)):
     return db.query(Message).filter(
         Message.conversation_id == conversation_id
     ).order_by(Message.created_at.asc()).all()
+
 @router.get("/users")
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(User).all()
-    @router.post("/conversations/{conv_id}/members/{user_id}")
+
+@router.post("/conversations/{conv_id}/members/{user_id}")
 def add_member(conv_id: int, user_id: int, db: Session = Depends(get_db)):
     existing = db.query(ConversationMember).filter(
         ConversationMember.conversation_id == conv_id,
